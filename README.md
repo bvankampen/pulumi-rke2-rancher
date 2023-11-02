@@ -9,4 +9,5 @@ Build an example solution for installing RKE2 and Rancher with Pulumi (including
 ### Resources
 - [Hackweek 23 Project](https://hackweek.opensuse.org/23/projects/rke2-and-rancher-deployment-with-pulumi)
 - [Pulumi](https://www.pulumi.com)
-- [RKE2](https://docs.rke2.io/)
+- [RKE2 Docs](https://docs.rke2.io/)
+- [Rancher Docs](https://ranchermanager.docs.rancher.com/)
