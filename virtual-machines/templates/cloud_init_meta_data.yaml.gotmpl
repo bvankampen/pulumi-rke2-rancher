@@ -1,0 +1,14 @@
+network:
+  version: 1
+  config:
+    - type: physical
+      name: {{ .Network.Interface }}
+      subnets:
+        - type: static
+          address: {{ .IP }}/{{ .Network.SubnetMask }}
+          gateway: {{ .Network.Gateway }}
+    - type: nameserver
+      address:
+      {{ range $dns := .Network.DNS }}
+        - {{ $dns }}
+      {{ end }}

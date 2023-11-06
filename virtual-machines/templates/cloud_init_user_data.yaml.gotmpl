@@ -1,0 +1,28 @@
+#cloud-config
+users:
+{{ range $user := .Users }}
+  - name: {{ $user.Name }}
+    ssh-authorized-keys:
+    {{ range $key := $user.SSHAuthorizedKeys }}
+      - {{ $key }}
+    {{ end }}
+    sudo: "ALL=(ALL) NOPASSWD:ALL"
+    passwd: {{ $user.Password }}
+    lock-passwd: false
+{{ end }}
+hostname: {{ .Hostname }}
+{{ if .Longhorn }}
+disk_setup:
+  /dev/sdb:
+    table_type: gpt
+    layout: true
+    overwrite: true
+fs_setup:
+  - filesystem: 'xfs'
+    device: /dev/sdb1
+    overwrite: true
+runcmd:
+  - mkdir /var/lib/longhorn
+mounts:
+  - ["/dev/sdb1","/var/lib/longhorn"]
+{{ end }}
