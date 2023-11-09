@@ -8,7 +8,7 @@ import (
 	"os"
 )
 
-func (d *DownloadFileArgs) Exists() bool {
+func (d *DownloadFileArguments) Exists() bool {
 	if _, err := os.Stat(d.LocalFilePath()); err == nil {
 		return true
 	} else {
@@ -16,11 +16,11 @@ func (d *DownloadFileArgs) Exists() bool {
 	}
 }
 
-func (d *DownloadFileArgs) LocalFilePath() string {
+func (d *DownloadFileArguments) LocalFilePath() string {
 	return d.LocalPath + "/" + d.Version + "/" + d.Name
 }
 
-func (d *DownloadFileArgs) GetURL() string {
+func (d *DownloadFileArguments) GetURL() string {
 	return d.BaseURL + "/" + d.Version + "/" + d.Name
 }
 
@@ -28,7 +28,7 @@ func (d *DownloadFile) Update() {
 	fmt.Print("update")
 }
 
-func NewDownloadFile(ctx *pulumi.Context, name string, args DownloadFileArgs, opts ...pulumi.ResourceOption) (*DownloadFile, error) {
+func NewDownloadFile(ctx *pulumi.Context, name string, file DownloadFileArguments, opts ...pulumi.ResourceOption) (*DownloadFile, error) {
 	DownloadFile := &DownloadFile{}
 
 	err := ctx.RegisterComponentResource("rancher:rke2:DownloadFile", name, DownloadFile, opts...)
@@ -40,41 +40,41 @@ func NewDownloadFile(ctx *pulumi.Context, name string, args DownloadFileArgs, op
 		return DownloadFile, nil
 	}
 
-	err = os.MkdirAll(args.LocalPath+"/"+args.Version, 0750)
+	err = os.MkdirAll(file.LocalPath+"/"+file.Version, 0750)
 	if err != nil {
 		return nil, err
 	}
 
-	if args.Exists() {
-		ctx.Log.Warn("file: "+args.Version+"/"+args.Name+" exists", nil)
+	if file.Exists() {
+		ctx.Log.Warn("localFile: "+file.Version+"/"+file.Name+" exists", nil)
 		return DownloadFile, nil
 	}
 
-	response, err := http.Get(args.GetURL())
+	response, err := http.Get(file.GetURL())
 	if err != nil {
 		return nil, err
 	}
 	defer response.Body.Close()
 
-	file, err := os.Create(args.LocalFilePath())
+	localFile, err := os.Create(file.LocalFilePath())
 	if err != nil {
 		return nil, err
 	}
-	defer file.Close()
+	defer localFile.Close()
 
-	_, err = io.Copy(file, response.Body)
+	_, err = io.Copy(localFile, response.Body)
 
 	return DownloadFile, err
 }
 
-func NewDownloadRKE2Files(ctx *pulumi.Context, name string, args []DownloadFileArgs, opts ...pulumi.ResourceOption) (*DownloadRKE2Files, error) {
+func NewDownloadRKE2Files(ctx *pulumi.Context, name string, files []DownloadFileArguments, opts ...pulumi.ResourceOption) (*DownloadRKE2Files, error) {
 	DownloadRKE2Files := &DownloadRKE2Files{}
 	err := ctx.RegisterComponentResource("rancher:rke2:DownloadRKE2Files", name, DownloadRKE2Files, opts...)
 	if err != nil {
 		return nil, err
 	}
-	for _, arg := range args {
-		_, err := NewDownloadFile(ctx, "download-"+arg.Name, arg, pulumi.Parent(DownloadRKE2Files))
+	for _, file := range files {
+		_, err := NewDownloadFile(ctx, "download-"+file.Name, file, pulumi.Parent(DownloadRKE2Files))
 		if err != nil {
 			return nil, err
 		}

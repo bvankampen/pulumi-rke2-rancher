@@ -32,7 +32,7 @@ type RemoteCommandArguments struct {
 	SshPrivateKey string
 }
 
-type RemoteCommandListItem struct {
+type RemoteCommandListArguments struct {
 	Name          string
 	CreateCommand string
 	DeleteCommand string
@@ -48,7 +48,7 @@ type DownloadRKE2Files struct {
 	pulumi.ResourceState
 }
 
-type DownloadFileArgs struct {
+type DownloadFileArguments struct {
 	Name      string
 	BaseURL   string
 	Version   string

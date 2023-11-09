@@ -6,7 +6,7 @@ import (
 )
 
 func ConfigureNodes(ctx *pulumi.Context) (*components.RemoteCommandList, error) {
-	var list = []components.RemoteCommandListItem{
+	var list = []components.RemoteCommandListArguments{
 		{
 			Name:          "disable-and-stop-firewalld",
 			CreateCommand: "if systemctl | grep firewalld.service; then sudo systemctl disable --now firewalld; fi",
@@ -26,40 +26,48 @@ func ConfigureNodes(ctx *pulumi.Context) (*components.RemoteCommandList, error) 
 	return remoteCommandList, nil
 }
 
-func DownloadRKE2Sources(ctx *pulumi.Context, version string, dependsOn []pulumi.Resource) error {
+func DownloadRKE2Sources(ctx *pulumi.Context, dependsOn []pulumi.Resource) (*components.DownloadRKE2Files, error) {
 
-	localPath := appconfig.SourceBasePath
-	baseURL := appconfig.SourceBaseURL
-
-	downloadFiles := []components.DownloadFileArgs{
+	files := []components.DownloadFileArguments{
 		{
 			Name:      "rke2.linux-amd64.tar.gz",
-			BaseURL:   baseURL,
-			Version:   version,
-			LocalPath: localPath,
+			BaseURL:   appconfig.SourceBaseURL,
+			Version:   appconfig.Version,
+			LocalPath: appconfig.SourceBasePath,
 		},
 		{
 			Name:      "rke2-images.linux-amd64.tar.zst",
-			BaseURL:   baseURL,
-			Version:   version,
-			LocalPath: localPath,
+			BaseURL:   appconfig.SourceBaseURL,
+			Version:   appconfig.Version,
+			LocalPath: appconfig.SourceBasePath,
 		},
 		{
 			Name:      "sha256sum-amd64.txt",
-			BaseURL:   baseURL,
-			Version:   version,
-			LocalPath: localPath,
+			BaseURL:   appconfig.SourceBaseURL,
+			Version:   appconfig.Version,
+			LocalPath: appconfig.SourceBasePath,
 		},
 	}
 
-	_, err := components.NewDownloadRKE2Files(ctx, "download-rke2-files", downloadFiles, pulumi.DependsOn(dependsOn))
+	downloadFiles, err := components.NewDownloadRKE2Files(ctx, "download-rke2-files", files, pulumi.DependsOn(dependsOn))
 
-	return err
+	return downloadFiles, err
+}
+
+func UploadFiles(ctx *pulumi.Context, dependsOn []pulumi.Resource) error {
+	return nil
 }
 
 func InstallRKE2(ctx *pulumi.Context) error {
 	configureNodes, err := ConfigureNodes(ctx)
-	err = DownloadRKE2Sources(ctx, appconfig.Version, []pulumi.Resource{configureNodes})
+	if err != nil {
+		return err
+	}
+	downloadRKE2Sources, err := DownloadRKE2Sources(ctx, []pulumi.Resource{configureNodes})
+	if err != nil {
+		return err
+	}
+	err = UploadFiles(ctx, []pulumi.Resource{downloadRKE2Sources})
 	if err != nil {
 		return err
 	}

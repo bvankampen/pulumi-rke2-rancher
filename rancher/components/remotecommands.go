@@ -35,7 +35,7 @@ func NewRemoteCommand(ctx *pulumi.Context, command RemoteCommandArguments, opts 
 	return RemoteCommand, nil
 }
 
-func NewRemoteCommandList(ctx *pulumi.Context, name string, nodes []Node, commandList []RemoteCommandListItem, sshuser SshUser, opts ...pulumi.ResourceOption) (*RemoteCommandList, error) {
+func NewRemoteCommandList(ctx *pulumi.Context, name string, nodes []Node, commandList []RemoteCommandListArguments, sshuser SshUser, opts ...pulumi.ResourceOption) (*RemoteCommandList, error) {
 	RemoteCommandList := &RemoteCommandList{}
 
 	err := ctx.RegisterComponentResource("rancher:rke2:RemoteCommandList", name, RemoteCommandList, opts...)
