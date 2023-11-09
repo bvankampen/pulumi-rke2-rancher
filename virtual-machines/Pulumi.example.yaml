@@ -1,0 +1,27 @@
+encryptionsalt: xxx
+config:
+  virtual-machines:users:
+    - name: rancher
+      password:
+        secure: xxx
+      sshauthorizedkeys:
+        - secure: xxx
+  virtual-machines:vmconfig:
+    baseimagename: openSUSE-Leap-15.5.x86_64-NoCloud.qcow2
+    basepoolname: iso
+    disksize: 10
+    network:
+      dns:
+        - 0.0.0.0
+        - 0.0.0.0
+      gateway: 0.0.0.0
+      name: Routed
+      subnetmask: 24
+    poolname: default
+  virtual-machines:vms:
+    - ip: 0.0.0.0
+      name: rancher-1
+    - name: rancher-2
+      ip: 0.0.0.0
+    - name: rancher-3
+      ip: 0.0.0.0

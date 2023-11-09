@@ -1,0 +1,18 @@
+encryptionsalt: xxx
+config:
+  rancher:config:
+    airgapped: true
+    version: v1.26.8+rke2r1
+    sourcebasepath: "../source/rke2/"
+    sourcebaseurl: "https://github.com/rancher/rke2/releases/download/"
+    filesbasepath: "../files/"
+  rancher:nodes:
+    - ip: 0.0.0.0
+      name: rancher-1
+    - ip: 0.0.0.0
+      name: rancher-2
+    - ip: 0.0.0.0
+      name: rancher-3
+  rancher:sshuser:
+    name: rancher
+    privatekeyfile: "~/.ssh/id_rsa"
