@@ -9,40 +9,6 @@ import (
 	"text/template"
 )
 
-type User struct {
-	Name              string
-	SSHAuthorizedKeys []string
-	Password          string
-}
-
-type UserData struct {
-	Users    []User
-	Longhorn bool
-	Hostname string
-}
-
-type VMConfig struct {
-	BaseImageName string
-	BasePoolName  string
-	DiskSize      int
-	PoolName      string
-	Network       NetworkInfo
-}
-
-type VM struct {
-	Name    string
-	IP      string
-	Network NetworkInfo
-}
-
-type NetworkInfo struct {
-	Interface  string
-	Name       string
-	Gateway    string
-	SubnetMask int
-	DNS        []string
-}
-
 const GB = 1024 * 1024 * 1024 * 1024
 
 func ParseTemplate(fileName string, data any) (string, error) {
