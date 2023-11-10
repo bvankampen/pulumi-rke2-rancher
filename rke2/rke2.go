@@ -136,9 +136,9 @@ func UploadFiles(ctx *pulumi.Context, dependsOn []pulumi.Resource) (*components.
 				RemotePath: "/opt/rke2/install",
 				UseSudo:    true,
 			}, {
-				Name:       "registries.yaml",
+				Name:       "run-install-rke2-airgapped.sh",
 				LocalPath:  appconfig.FilesBasePath,
-				RemotePath: "/etc/rancher/rke2",
+				RemotePath: "/opt/rke2/install",
 				UseSudo:    true,
 			},
 		}...)
@@ -188,6 +188,18 @@ func CreateAndUploadRKE2Config(ctx *pulumi.Context, dependsOn []pulumi.Resource)
 			RemotePath:       "/etc/rancher/rke2/",
 			TemplateTempPath: "../tmp/" + node.Name,
 		}}
+
+		if appconfig.Airgapped {
+			files = append(files, []components.UploadFilesArguments{{
+				Name:             "registries.yaml",
+				LocalPath:        tempPath,
+				UseSudo:          true,
+				TemplateData:     rke2config,
+				TemplateFile:     "./templates/registries.yaml.gotmpl",
+				RemotePath:       "/etc/rancher/rke2/",
+				TemplateTempPath: "../tmp/" + node.Name,
+			}}...)
+		}
 
 		rke2config.FirstNode = false
 

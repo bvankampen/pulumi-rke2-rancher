@@ -11,6 +11,9 @@ config:
     cni: calico
     cisprofile:
     rke2token: unsafe-rke2-token
+    registries: |
+      registries:
+        mirrors:
   rancher:nodes:
     - ip: 0.0.0.0
       name: rancher-1
