@@ -1,0 +1,12 @@
+{{ if not .FirstNode }}
+server: https://{{ .FirstNodeIP }}:9345
+{{ end }}
+write-kubeconfig-mode: "0644"
+tls-san: {{ .AppConfig.TLSSANHostname }}
+token: {{ .AppConfig.RKE2Token }}
+cni: {{ .AppConfig.CNI }}
+node-name: {{ .NodeName }}
+{{ if .AppConfig.CISProfile }}
+profile: {{ .AppConfig.CISProfile }}
+pod-security-admission-config-file: /etc/rancher/rke2/rancher-psact.yaml
+{{ end }}

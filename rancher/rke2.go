@@ -2,11 +2,12 @@ package main
 
 import (
 	"github.com/pulumi/pulumi/sdk/v3/go/pulumi"
+	"os"
 	"rancher/components"
 )
 
-func ConfigureNodes(ctx *pulumi.Context) (*components.RemoteCommandList, error) {
-	var list = []components.RemoteCommandListArguments{
+func ConfigureNodes(ctx *pulumi.Context) (*components.RemoteCommands, error) {
+	var list = []components.RemoteCommandsArguments{
 		{
 			Name:          "disable-and-stop-firewalld",
 			CreateCommand: "if systemctl | grep firewalld.service; then sudo systemctl disable --now firewalld; fi",
@@ -19,14 +20,14 @@ func ConfigureNodes(ctx *pulumi.Context) (*components.RemoteCommandList, error) 
 		},
 	}
 
-	remoteCommandList, err := components.NewRemoteCommandList(ctx, "configure-nodes", nodes, list, sshuser)
+	remoteCommands, err := components.NewRemoteCommands(ctx, "configure-nodes", nodes, list, sshuser)
 	if err != nil {
-		return remoteCommandList, err
+		return remoteCommands, err
 	}
-	return remoteCommandList, nil
+	return remoteCommands, nil
 }
 
-func DownloadRKE2Sources(ctx *pulumi.Context, dependsOn []pulumi.Resource) (*components.DownloadRKE2Files, error) {
+func DownloadRKE2Sources(ctx *pulumi.Context, dependsOn []pulumi.Resource) (*components.DownloadFiles, error) {
 
 	files := []components.DownloadFileArguments{
 		{
@@ -47,15 +48,150 @@ func DownloadRKE2Sources(ctx *pulumi.Context, dependsOn []pulumi.Resource) (*com
 			Version:   appconfig.Version,
 			LocalPath: appconfig.SourceBasePath,
 		},
+		{
+			Name:      "install.sh",
+			BaseURL:   "https://get.rke2.io",
+			Version:   appconfig.Version,
+			LocalPath: appconfig.SourceBasePath,
+		},
 	}
 
-	downloadFiles, err := components.NewDownloadRKE2Files(ctx, "download-rke2-files", files, pulumi.DependsOn(dependsOn))
+	downloadFiles, err := components.NewDownloadFiles(ctx, "download-rke2-files", files, pulumi.DependsOn(dependsOn))
 
 	return downloadFiles, err
 }
 
-func UploadFiles(ctx *pulumi.Context, dependsOn []pulumi.Resource) error {
-	return nil
+func HardenRKE2(ctx *pulumi.Context, dependsOn []pulumi.Resource) (*components.RemoteCommands, error) {
+	var list = []components.RemoteCommandsArguments{
+		{
+			Name:          "add-etcd-group",
+			CreateCommand: "sudo groupadd -f --system etcd",
+		}, {
+			Name:          "add-user-etcd",
+			CreateCommand: "id -u etcd &>/dev/null || sudo useradd -M --system -g etcd -s /sbin/nologin etcd",
+		}, {
+			Name:          "create-etcd-directory",
+			CreateCommand: "sudo mkdir -p /var/lib/rancher/rke2/server/db/etcd && sudo chown etcd:etcd /var/lib/rancher/rke2/server/db/etcd && sudo chmod 0700 /var/lib/rancher/rke2/server/db/etcd",
+		},
+	}
+
+	remoteCommands, err := components.NewRemoteCommands(ctx, "harden-nodes-for-rke2", nodes, list, sshuser, pulumi.DependsOn(dependsOn))
+	if err != nil {
+		return remoteCommands, err
+	}
+	return remoteCommands, nil
+}
+
+func UploadFiles(ctx *pulumi.Context, dependsOn []pulumi.Resource) (*components.UploadFiles, error) {
+
+	files := []components.UploadFilesArguments{
+		{
+			Name:              "00-suse-rancher.conf",
+			LocalPath:         appconfig.FilesBasePath,
+			RemotePath:        "/etc/sysctl.d",
+			UseSudo:           true,
+			PostUploadCommand: "sudo sysctl -f --system",
+		}, {
+			Name:       "sha256sum-amd64.txt",
+			LocalPath:  appconfig.SourceBasePath,
+			Version:    appconfig.Version,
+			RemotePath: "/opt/rke2/install",
+			UseSudo:    true,
+		}, {
+			Name:       "rke2-images.linux-amd64.tar.zst",
+			LocalPath:  appconfig.SourceBasePath,
+			Version:    appconfig.Version,
+			RemotePath: "/opt/rke2/install",
+			UseSudo:    true,
+		}, {
+			Name:       "rke2.linux-amd64.tar.gz",
+			LocalPath:  appconfig.SourceBasePath,
+			Version:    appconfig.Version,
+			RemotePath: "/opt/rke2/install",
+			UseSudo:    true,
+		}, {
+			Name:       "install.sh",
+			LocalPath:  appconfig.SourceBasePath,
+			Version:    appconfig.Version,
+			RemotePath: "/opt/rke2/install",
+			UseSudo:    true,
+		}, {
+			Name:       "run-install-rke2.sh",
+			LocalPath:  appconfig.FilesBasePath,
+			RemotePath: "/opt/rke2/install",
+			UseSudo:    true,
+		}, {
+			Name:       "wait-for-rke2.sh",
+			LocalPath:  appconfig.FilesBasePath,
+			RemotePath: "/opt/rke2/install",
+			UseSudo:    true,
+		}, {
+			Name:       "rancher-psact.yaml",
+			LocalPath:  appconfig.FilesBasePath,
+			RemotePath: "/etc/rancher/rke2",
+			UseSudo:    true,
+		}, {
+			Name:              "bashrc",
+			LocalPath:         appconfig.FilesBasePath,
+			RemotePath:        "/tmp",
+			PostUploadCommand: "cat /tmp/bashrc | sudo tee -a /root/.bashrc",
+		}, {
+			Name:       "registries.yaml",
+			LocalPath:  appconfig.FilesBasePath,
+			RemotePath: "/etc/rancher/rke2",
+			UseSudo:    true,
+		},
+	}
+
+	uploadFiles, err := components.NewUploadFiles(ctx, "upload-files", nodes, files, sshuser, pulumi.DependsOn(dependsOn))
+	if err != nil {
+		return uploadFiles, err
+	}
+	return uploadFiles, nil
+}
+
+func CreateAndUploadRKE2Config(ctx *pulumi.Context, dependsOn []pulumi.Resource) ([]pulumi.Resource, error) {
+	rke2config.AppConfig = appconfig
+	rke2config.FirstNode = true
+	rke2config.FirstNodeIP = nodes[0].IP
+	var allUploadFiles []pulumi.Resource
+
+	for _, node := range nodes {
+
+		rke2config.NodeName = node.Name
+
+		tempPath := appconfig.TempFilesBasePath + "/" + node.Name
+
+		err := os.MkdirAll(tempPath, 0750)
+		if err != nil {
+			return nil, err
+		}
+
+		files := []components.UploadFilesArguments{{
+			Name:             "config.yaml",
+			LocalPath:        tempPath,
+			UseSudo:          true,
+			TemplateData:     rke2config,
+			TemplateFile:     "./templates/config.yaml.gotmpl",
+			RemotePath:       "/etc/rancher/rke2/",
+			TemplateTempPath: "../tmp/" + node.Name,
+		}}
+
+		rke2config.FirstNode = false
+
+		uploadFiles, err := components.NewUploadFiles(ctx, "upload-rke2-config-files-"+node.Name, []components.Node{node}, files, sshuser, pulumi.DependsOn(dependsOn))
+		allUploadFiles = append(allUploadFiles, uploadFiles)
+		if err != nil {
+			return allUploadFiles, err
+		}
+	}
+
+	return allUploadFiles, nil
+}
+
+func RunRKE2Installer(ctx *pulumi.Context, dependsOn []pulumi.Resource) (*components.RunRKE2Installer, error) {
+	runRKE2Install, err := components.NewRunRKE2Installer(ctx, "run-rke2-installer", nodes, sshuser, pulumi.DependsOn(dependsOn))
+	return runRKE2Install, err
 }
 
 func InstallRKE2(ctx *pulumi.Context) error {
@@ -63,11 +199,23 @@ func InstallRKE2(ctx *pulumi.Context) error {
 	if err != nil {
 		return err
 	}
-	downloadRKE2Sources, err := DownloadRKE2Sources(ctx, []pulumi.Resource{configureNodes})
+	hardenRKE2, err := HardenRKE2(ctx, []pulumi.Resource{configureNodes})
 	if err != nil {
 		return err
 	}
-	err = UploadFiles(ctx, []pulumi.Resource{downloadRKE2Sources})
+	downloadRKE2Sources, err := DownloadRKE2Sources(ctx, []pulumi.Resource{hardenRKE2})
+	if err != nil {
+		return err
+	}
+	uploadFiles, err := UploadFiles(ctx, []pulumi.Resource{downloadRKE2Sources})
+	if err != nil {
+		return err
+	}
+	allUploadFiles, err := CreateAndUploadRKE2Config(ctx, []pulumi.Resource{uploadFiles})
+	if err != nil {
+		return err
+	}
+	_, err = RunRKE2Installer(ctx, allUploadFiles)
 	if err != nil {
 		return err
 	}

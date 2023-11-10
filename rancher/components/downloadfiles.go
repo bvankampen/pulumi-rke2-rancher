@@ -36,6 +36,7 @@ func NewDownloadFile(ctx *pulumi.Context, name string, file DownloadFileArgument
 		return nil, err
 	}
 
+	// Do not download file if this is a DryRun (preview)
 	if ctx.DryRun() {
 		return DownloadFile, nil
 	}
@@ -45,6 +46,7 @@ func NewDownloadFile(ctx *pulumi.Context, name string, file DownloadFileArgument
 		return nil, err
 	}
 
+	// If file exists do not download file
 	if file.Exists() {
 		ctx.Log.Warn("localFile: "+file.Version+"/"+file.Name+" exists", nil)
 		return DownloadFile, nil
@@ -67,9 +69,9 @@ func NewDownloadFile(ctx *pulumi.Context, name string, file DownloadFileArgument
 	return DownloadFile, err
 }
 
-func NewDownloadRKE2Files(ctx *pulumi.Context, name string, files []DownloadFileArguments, opts ...pulumi.ResourceOption) (*DownloadRKE2Files, error) {
-	DownloadRKE2Files := &DownloadRKE2Files{}
-	err := ctx.RegisterComponentResource("rancher:rke2:DownloadRKE2Files", name, DownloadRKE2Files, opts...)
+func NewDownloadFiles(ctx *pulumi.Context, name string, files []DownloadFileArguments, opts ...pulumi.ResourceOption) (*DownloadFiles, error) {
+	DownloadRKE2Files := &DownloadFiles{}
+	err := ctx.RegisterComponentResource("rancher:rke2:DownloadFiles", name, DownloadRKE2Files, opts...)
 	if err != nil {
 		return nil, err
 	}

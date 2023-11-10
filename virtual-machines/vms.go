@@ -9,7 +9,7 @@ import (
 	"text/template"
 )
 
-const GB = 1024 * 1024 * 1024 * 1024
+const GB = 1024 * 1024 * 1024
 
 func ParseTemplate(fileName string, data any) (string, error) {
 	f, err := os.ReadFile(fileName)
@@ -76,8 +76,8 @@ func createVirtualMachines(ctx *pulumi.Context) error {
 		}
 
 		_, err = libvirt.NewDomain(ctx, vm.Name, &libvirt.DomainArgs{
-			Memory:    pulumi.Int(1024),
-			Vcpu:      pulumi.Int(2),
+			Memory:    pulumi.Int(vmConfig.Memory * 1024),
+			Vcpu:      pulumi.Int(vmConfig.Cpu),
 			Cloudinit: cloudInit.ID(),
 			Disks: libvirt.DomainDiskArray{
 				libvirt.DomainDiskArgs{

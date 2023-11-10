@@ -13,26 +13,11 @@ type SshUser struct {
 	PrivateKey     string
 }
 
-type RemoteCommand struct {
+type RemoteCommands struct {
 	pulumi.ResourceState
 }
 
-type RemoteCommandList struct {
-	pulumi.ResourceState
-}
-
-type RemoteCommandArguments struct {
-	Name          string
-	Node          Node
-	CreateCommand string
-	DeleteCommand string
-	UpdateCommand string
-	ExportOutput  bool
-	SshUser       string
-	SshPrivateKey string
-}
-
-type RemoteCommandListArguments struct {
+type RemoteCommandsArguments struct {
 	Name          string
 	CreateCommand string
 	DeleteCommand string
@@ -44,7 +29,7 @@ type DownloadFile struct {
 	pulumi.ResourceState
 }
 
-type DownloadRKE2Files struct {
+type DownloadFiles struct {
 	pulumi.ResourceState
 }
 
@@ -53,4 +38,31 @@ type DownloadFileArguments struct {
 	BaseURL   string
 	Version   string
 	LocalPath string
+}
+
+type UploadFiles struct {
+	pulumi.ResourceState
+}
+
+type UploadFilesArguments struct {
+	LocalPath         string
+	Version           string
+	Name              string
+	RemotePath        string
+	UseSudo           bool
+	PostUploadCommand string
+	TemplateFile      string
+	TemplateData      any
+	TemplateTempPath  string
+}
+
+type UploadTemplates struct {
+	pulumi.ResourceState
+}
+
+type UploadTemplatesArguments struct {
+}
+
+type RunRKE2Installer struct {
+	pulumi.ResourceState
 }

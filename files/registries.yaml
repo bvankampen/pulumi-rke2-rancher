@@ -1,0 +1,37 @@
+registries:
+  mirrors:
+    docker.io:
+      endpoint:
+        - "https://harbor.lan.ping6.nl"
+      rewrite:
+        "(.*)": "docker.io/$1"
+    quay.io:
+      endpoint:
+        - "https://harbor.lan.ping6.nl"
+      rewrite:
+        "(.*)": "quay.io/$1"
+    gcr.io:
+      endpoint:
+        - "https://harbor.lan.ping6.nl"
+      rewrite:
+        "(.*)": "gcr.io/$1"
+    k8s.gcr.io:
+      endpoint:
+        - "https://harbor.lan.ping6.nl"
+      rewrite:
+        "(.*)": "k8s.gcr.io/$1"
+    registry.k8s.io:
+      endpoint:
+        - "https://harbor.lan.ping6.nl"
+      rewrite:
+        "(.*)": "registry.k8s.io/$1"
+    registry.rancher.com:
+      endpoint:
+        - "https://harbor.lan.ping6.nl"
+      rewrite:
+        "(.*)": "registry.rancher.com/$1"
+    ghcr.io:
+      endpoint:
+        - "https://harbor.lan.ping6.nl"
+      rewrite:
+        "(.*)": "ghcr.io/$1"

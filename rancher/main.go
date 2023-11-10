@@ -13,6 +13,7 @@ import (
 var nodes []components.Node
 var sshuser components.SshUser
 var appconfig AppConfig
+var rke2config RKE2Config
 
 func LoadConfig(ctx *pulumi.Context) error {
 	cfg := config.New(ctx, "rancher")

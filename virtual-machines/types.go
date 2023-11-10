@@ -18,6 +18,8 @@ type VMConfig struct {
 	DiskSize      int
 	PoolName      string
 	Network       NetworkInfo
+	Memory        int
+	Cpu           int
 }
 
 type VM struct {
