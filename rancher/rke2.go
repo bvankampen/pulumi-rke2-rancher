@@ -92,30 +92,6 @@ func UploadFiles(ctx *pulumi.Context, dependsOn []pulumi.Resource) (*components.
 			UseSudo:           true,
 			PostUploadCommand: "sudo sysctl -f --system",
 		}, {
-			Name:       "sha256sum-amd64.txt",
-			LocalPath:  appconfig.SourceBasePath,
-			Version:    appconfig.Version,
-			RemotePath: "/opt/rke2/install",
-			UseSudo:    true,
-		}, {
-			Name:       "rke2-images.linux-amd64.tar.zst",
-			LocalPath:  appconfig.SourceBasePath,
-			Version:    appconfig.Version,
-			RemotePath: "/opt/rke2/install",
-			UseSudo:    true,
-		}, {
-			Name:       "rke2.linux-amd64.tar.gz",
-			LocalPath:  appconfig.SourceBasePath,
-			Version:    appconfig.Version,
-			RemotePath: "/opt/rke2/install",
-			UseSudo:    true,
-		}, {
-			Name:       "install.sh",
-			LocalPath:  appconfig.SourceBasePath,
-			Version:    appconfig.Version,
-			RemotePath: "/opt/rke2/install",
-			UseSudo:    true,
-		}, {
 			Name:       "run-install-rke2.sh",
 			LocalPath:  appconfig.FilesBasePath,
 			RemotePath: "/opt/rke2/install",
@@ -126,21 +102,57 @@ func UploadFiles(ctx *pulumi.Context, dependsOn []pulumi.Resource) (*components.
 			RemotePath: "/opt/rke2/install",
 			UseSudo:    true,
 		}, {
-			Name:       "rancher-psact.yaml",
-			LocalPath:  appconfig.FilesBasePath,
-			RemotePath: "/etc/rancher/rke2",
-			UseSudo:    true,
-		}, {
 			Name:              "bashrc",
 			LocalPath:         appconfig.FilesBasePath,
 			RemotePath:        "/tmp",
 			PostUploadCommand: "cat /tmp/bashrc | sudo tee -a /root/.bashrc",
-		}, {
-			Name:       "registries.yaml",
-			LocalPath:  appconfig.FilesBasePath,
-			RemotePath: "/etc/rancher/rke2",
-			UseSudo:    true,
 		},
+	}
+
+	if appconfig.Airgapped {
+		files = append(files, []components.UploadFilesArguments{
+			{
+				Name:       "sha256sum-amd64.txt",
+				LocalPath:  appconfig.SourceBasePath,
+				Version:    appconfig.Version,
+				RemotePath: "/opt/rke2/install",
+				UseSudo:    true,
+			}, {
+				Name:       "rke2-images.linux-amd64.tar.zst",
+				LocalPath:  appconfig.SourceBasePath,
+				Version:    appconfig.Version,
+				RemotePath: "/opt/rke2/install",
+				UseSudo:    true,
+			}, {
+				Name:       "rke2.linux-amd64.tar.gz",
+				LocalPath:  appconfig.SourceBasePath,
+				Version:    appconfig.Version,
+				RemotePath: "/opt/rke2/install",
+				UseSudo:    true,
+			}, {
+				Name:       "install.sh",
+				LocalPath:  appconfig.SourceBasePath,
+				Version:    appconfig.Version,
+				RemotePath: "/opt/rke2/install",
+				UseSudo:    true,
+			}, {
+				Name:       "registries.yaml",
+				LocalPath:  appconfig.FilesBasePath,
+				RemotePath: "/etc/rancher/rke2",
+				UseSudo:    true,
+			},
+		}...)
+	}
+
+	if appconfig.CISProfile != "" {
+		files = append(files, []components.UploadFilesArguments{
+			{
+				Name:       "rancher-psact.yaml",
+				LocalPath:  appconfig.FilesBasePath,
+				RemotePath: "/etc/rancher/rke2",
+				UseSudo:    true,
+			},
+		}...)
 	}
 
 	uploadFiles, err := components.NewUploadFiles(ctx, "upload-files", nodes, files, sshuser, pulumi.DependsOn(dependsOn))
@@ -190,7 +202,7 @@ func CreateAndUploadRKE2Config(ctx *pulumi.Context, dependsOn []pulumi.Resource)
 }
 
 func RunRKE2Installer(ctx *pulumi.Context, dependsOn []pulumi.Resource) (*components.RunRKE2Installer, error) {
-	runRKE2Install, err := components.NewRunRKE2Installer(ctx, "run-rke2-installer", nodes, sshuser, pulumi.DependsOn(dependsOn))
+	runRKE2Install, err := components.NewRunRKE2Installer(ctx, "run-rke2-installer", nodes, sshuser, appconfig.Airgapped, pulumi.DependsOn(dependsOn))
 	return runRKE2Install, err
 }
 

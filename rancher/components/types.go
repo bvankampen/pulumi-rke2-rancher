@@ -56,13 +56,6 @@ type UploadFilesArguments struct {
 	TemplateTempPath  string
 }
 
-type UploadTemplates struct {
-	pulumi.ResourceState
-}
-
-type UploadTemplatesArguments struct {
-}
-
 type RunRKE2Installer struct {
 	pulumi.ResourceState
 }

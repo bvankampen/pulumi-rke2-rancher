@@ -48,7 +48,7 @@ func NewDownloadFile(ctx *pulumi.Context, name string, file DownloadFileArgument
 
 	// If file exists do not download file
 	if file.Exists() {
-		ctx.Log.Warn("localFile: "+file.Version+"/"+file.Name+" exists", nil)
+		_ = ctx.Log.Warn("localFile: "+file.Version+"/"+file.Name+" exists", nil)
 		return DownloadFile, nil
 	}
 

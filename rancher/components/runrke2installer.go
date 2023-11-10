@@ -5,7 +5,7 @@ import (
 	"github.com/pulumi/pulumi/sdk/v3/go/pulumi"
 )
 
-func NewRunRKE2Installer(ctx *pulumi.Context, name string, nodes []Node, sshuser SshUser, opts ...pulumi.ResourceOption) (*RunRKE2Installer, error) {
+func NewRunRKE2Installer(ctx *pulumi.Context, name string, nodes []Node, sshuser SshUser, airgapped bool, opts ...pulumi.ResourceOption) (*RunRKE2Installer, error) {
 	RunRKE2Installer := &RunRKE2Installer{}
 	err := ctx.RegisterComponentResource("rancher:rke2:RunRKE2Installer", name, RunRKE2Installer, opts...)
 	if err != nil {
@@ -21,8 +21,16 @@ func NewRunRKE2Installer(ctx *pulumi.Context, name string, nodes []Node, sshuser
 			PrivateKey: pulumi.String(sshuser.PrivateKey),
 		}
 
+		var installCommand string
+
+		if airgapped {
+			installCommand = "sudo bash /opt/rke2/install/run-install-rke2-airgapped.sh"
+		} else {
+			installCommand = "sudo bash /opt/rke2/install/run-install-rke2.sh"
+		}
+
 		runRKE2Install, err := remote.NewCommand(ctx, "install-rke2-"+node.Name, &remote.CommandArgs{
-			Create:     pulumi.String("sudo bash /opt/rke2/install/run-install-rke2.sh"),
+			Create:     pulumi.String(installCommand),
 			Connection: &connection,
 		}, pulumi.Parent(RunRKE2Installer), pulumi.DependsOn(dependsOn))
 		if err != nil {
