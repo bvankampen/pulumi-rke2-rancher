@@ -59,3 +59,7 @@ type UploadFilesArguments struct {
 type RunRKE2Installer struct {
 	pulumi.ResourceState
 }
+
+type GetKubeConfig struct {
+	pulumi.ResourceState
+}

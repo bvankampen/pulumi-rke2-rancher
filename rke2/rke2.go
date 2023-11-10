@@ -218,6 +218,11 @@ func RunRKE2Installer(ctx *pulumi.Context, dependsOn []pulumi.Resource) (*compon
 	return runRKE2Install, err
 }
 
+func GetKubeConfig(ctx *pulumi.Context, dependsOn []pulumi.Resource) (*components.GetKubeConfig, error) {
+	getKubeConfig, err := components.NewGetKubeConfig(ctx, "get-kubeconfig", nodes[0], appconfig.KubeConfigPath, appconfig.ClusterName+".yaml", sshuser, pulumi.DependsOn(dependsOn))
+	return getKubeConfig, err
+}
+
 func InstallRKE2(ctx *pulumi.Context) error {
 	configureNodes, err := ConfigureNodes(ctx)
 	if err != nil {
@@ -239,7 +244,11 @@ func InstallRKE2(ctx *pulumi.Context) error {
 	if err != nil {
 		return err
 	}
-	_, err = RunRKE2Installer(ctx, allUploadFiles)
+	runRKEInstaller, err := RunRKE2Installer(ctx, allUploadFiles)
+	if err != nil {
+		return err
+	}
+	_, err = GetKubeConfig(ctx, []pulumi.Resource{runRKEInstaller})
 	if err != nil {
 		return err
 	}

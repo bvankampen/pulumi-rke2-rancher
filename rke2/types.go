@@ -12,6 +12,8 @@ type AppConfig struct {
 	TempFilesBasePath string
 	SourceBaseURL     string
 	FilesBasePath     string
+	KubeConfigPath    string
+	ClusterName       string
 	CNI               string
 	CISProfile        string
 	RKE2Token         string

@@ -1,3 +1,4 @@
 *.dev.yaml
 source/**
 tmp/** 
+kubeconfigs/**
