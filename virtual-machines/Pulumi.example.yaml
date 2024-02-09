@@ -10,6 +10,8 @@ config:
     baseimagename: openSUSE-Leap-15.5.x86_64-NoCloud.qcow2
     basepoolname: iso
     disksize: 10
+    memory: 8
+    cpu: 2
     network:
       dns:
         - 0.0.0.0
