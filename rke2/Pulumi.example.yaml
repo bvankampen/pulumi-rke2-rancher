@@ -2,7 +2,7 @@ encryptionsalt: xxx
 config:
   rancher:config:
     airgapped: true
-    version: v1.26.8+rke2r1
+    version: v1.29.1+rke2r1
     sourcebasepath: "../source/rke2/"
     sourcebaseurl: "https://github.com/rancher/rke2/releases/download/"
     filesbasepath: "../files/"
